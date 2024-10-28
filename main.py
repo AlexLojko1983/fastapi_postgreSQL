@@ -31,7 +31,7 @@ async def update_item(item_id: int, item: Item):
     return {"item_name": item.name, "item_id": item_id}
 
 @app.get('/courses')
-async def get_courses(sort_by: str = 'date', domain=None):
+async def get_courses(sort_by: str = 'date', domain: str=None):
     for course in db.courses.find():
         total = 0
         count = 0
@@ -39,7 +39,7 @@ async def get_courses(sort_by: str = 'date', domain=None):
             with contextlib.suppress(KeyError):
                 total += chapter['rating']['total']
                 count += chapter['rating']['count']
-        db.courses.update_one({"id": course['id']}, {'$set':{"rating": {'total': total, 'count': count}}})
+        db.courses.update_one({"id": course['_id']}, {'$set':{"rating": {'total': total, 'count': count}}})
 
     #Sort by
     if sort_by == 'date':
@@ -56,7 +56,7 @@ async def get_courses(sort_by: str = 'date', domain=None):
     if domain:
         query['domain'] = domain
 
-    courses = db.courses.find(query, {'name': 1, 'date': 1, 'description': 1, 'rating': 1, 'id': 0}).sort(sort_field, sort_order)
+    courses = db.courses.find(query, {'name': 1, 'date': 1, 'description': 1, 'rating': 1, '_id': 0}).sort(sort_field, sort_order)
     return list(courses)
 
 

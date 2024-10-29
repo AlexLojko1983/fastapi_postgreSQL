@@ -1,4 +1,6 @@
 from typing import Union
+
+from bson.errors import InvalidId
 from pydantic import BaseModel
 import contextlib
 from fastapi import FastAPI, HTTPException, Query
@@ -61,9 +63,15 @@ async def get_courses(sort_by: str = 'date', domain: str=None):
 
 @app.get('/courses/{course_id}')
 async def get_course(course_id: str):
+    try:
+        course_id = ObjectId(course_id)
+    except InvalidId:
+        raise HTTPException(status_code=400, detail='Invalid course ID format')
+
     course = db.courses.find_one({'_id':ObjectId(course_id)},{'_id': 0, 'chapters': 0})
     if not course:
         raise HTTPException(status_code=404, detail='Course not found')
+
     try:
         course['rating']=course['rating']['total']
     except KeyError:
@@ -74,6 +82,11 @@ async def get_course(course_id: str):
 
 @app.get('/courses/{course_id}/{chapter_id}')
 async def get_chapter(course_id: str, chapter_id: str):
+    try:
+        course_id = ObjectId(course_id)
+    except InvalidId:
+        raise HTTPException(status_code=400, detail='Invalid course ID format')
+
     course = db.courses.find_one({'_id': ObjectId(course_id)}, {'_id':0,})
     if not course:
         raise HTTPException(status_code=404, detail='Course not found')

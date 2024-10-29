@@ -72,7 +72,7 @@ async def get_course(course_id: str):
     return course
 
 
-@app.get('/courses/{course_id}/chapter_id}')
+@app.get('/courses/{course_id}/{chapter_id}')
 async def get_chapter(course_id: str, chapter_id: str):
     course = db.courses.find_one({'_id': ObjectId(course_id)}, {'_id':0,})
     if not course:

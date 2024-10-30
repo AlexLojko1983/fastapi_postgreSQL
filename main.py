@@ -97,6 +97,31 @@ async def get_chapter(course_id: str, chapter_id: str):
         raise HTTPException(status_code=404, detail='Chapter not found') from e
     return chapter
 
+@app.post('/courses/{course_id}/{chapter_id}')
+async def rate_chapter(course_id:str, chapter_id:str, rating:int =Query(..., gt=-2, lt=2)):
+    try:
+        course_id = ObjectId(course_id)
+    except InvalidId:
+        raise HTTPException(status_code=400, detail='Invalid course ID format')
+
+    course = db.courses.find_one({'_id':ObjectId(course_id)},{'_id':0})
+    if not course:
+        raise HTTPException(status_code=404, detail='Course not found')
+    chapters = course.get('chapters', [])
+    try:
+        chapter = chapters[int(chapter_id)]
+    except(ValueError, IndexError) as e:
+        raise HTTPException(status_code=404, detail='Chapter not found') from e
+    try:
+        chapter['rating']['total'] += rating
+        chapter['rating']['count'] += 1
+    except KeyError:
+        chapter['rating']={'total': rating, 'count':1}
+    db.courses.update_one({'_id': ObjectId(course_id)}, {'$set': {'chapter': chapter}})
+    return chapter
+
+
+
 
 
 
